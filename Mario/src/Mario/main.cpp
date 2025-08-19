@@ -3,6 +3,8 @@
 
 #include <Obsidian/Core/Window.hpp>
 
+#include <Photon/Server/Server.hpp>
+
 int main(int argc, char* argv[])
 {
     (void)argc; (void)argv;
@@ -20,6 +22,11 @@ int main(int argc, char* argv[])
     );
     windowPtr = &window;
 
+    Photon::Server server;
+    server.SetMessageCallback([](void* userData, Photon::MessageType type, const std::string& message) { std::cout << message << std::endl; });
+
+    server.Start(8080).Wait();
+
     while (window.IsOpen())
     {
         window.PollEvents();
@@ -27,5 +34,6 @@ int main(int argc, char* argv[])
         window.SwapBuffers();
     }
 
+    server.Stop();
     return 0;
 }

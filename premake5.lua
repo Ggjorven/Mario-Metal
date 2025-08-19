@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------------
+-- Utils
+------------------------------------------------------------------------------
+function this_directory()
+    local str = debug.getinfo(2, "S").source:sub(2)
+	local path = str:match("(.*/)")
+    return path:gsub("\\", "/") -- Replace \\ with /
+end
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
 -- Bug fixes
 ------------------------------------------------------------------------------
 -- Visual Studio: Bugfix for C++ Modules (same module file name per project)
@@ -45,6 +55,7 @@ workspace "Mario"
 
 group "Dependencies"
 	include "vendor/Obsidian/Obsidian/premake5-external"
+	include "vendor/Photon/Photon/premake5-external"
 group ""
 
 include "Mario"

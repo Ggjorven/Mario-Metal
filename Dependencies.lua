@@ -74,12 +74,21 @@ local Dependencies =
         IncludeDir = local_require("vendor/Obsidian/Obsidian/Dependencies.lua").Obsidian.IncludeDir,
         LibName = local_require("vendor/Obsidian/Obsidian/Dependencies.lua").Obsidian.LibName,
         PostBuildCommands = local_require("vendor/Obsidian/Obsidian/Dependencies.lua").Obsidian.PostBuildCommands,
+    },
+    Photon = 
+    {
+        -- Note: This is dumb (I know), but it looks the cleanest for now.
+        -- We should just load once.
+        IncludeDir = local_require("vendor/Photon/Photon/Dependencies.lua").Photon.IncludeDir,
+        LibName = local_require("vendor/Photon/Photon/Dependencies.lua").Photon.LibName,
+        PostBuildCommands = local_require("vendor/Photon/Photon/Dependencies.lua").Photon.PostBuildCommands,
     }
 }
 
 -- Note: Since these dependencies have their own Nano we remove those includedirs
 -- and just use the Nano that is a submodule to this repository.
 remove_from_table(Dependencies.Obsidian.IncludeDir, "vendor/Nano/Nano")
+remove_from_table(Dependencies.Photon.IncludeDir, "vendor/Nano/Nano")
 ------------------------------------------------------------------------------
 
 return Dependencies

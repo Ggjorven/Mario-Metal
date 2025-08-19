@@ -46,6 +46,10 @@ project "Mario"
 	links(Dependencies.Obsidian.LibName)
 	postbuildcommands(Dependencies.Obsidian.PostBuildCommands)
 
+	includedirs(Dependencies.Photon.IncludeDir)
+	links(Dependencies.Photon.LibName)
+	postbuildcommands(Dependencies.Photon.PostBuildCommands)
+
 	filter "system:windows"
 		systemversion "latest"
 		staticruntime "on"

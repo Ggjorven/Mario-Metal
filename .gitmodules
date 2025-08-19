@@ -4,3 +4,6 @@
 [submodule "vendor/Nano/Nano"]
 	path = vendor/Nano/Nano
 	url = https://github.com/Ggjorven/Nano.git
+[submodule "vendor/Photon/Photon"]
+	path = vendor/Photon/Photon
+	url = https://github.com/Ggjorven/Photon.git
