@@ -29,7 +29,9 @@ project "Mario"
 	defines
 	{
 		"_CRT_SECURE_NO_WARNINGS",
-		"_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS"
+		"_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS",
+
+		"OB_API_VULKAN"
 	}
 
 	includedirs
@@ -37,6 +39,12 @@ project "Mario"
 		"src",
 		"src/Mario",
 	}
+
+	includedirs(Dependencies.Nano.IncludeDir)
+
+	includedirs(Dependencies.Obsidian.IncludeDir)
+	links(Dependencies.Obsidian.LibName)
+	postbuildcommands(Dependencies.Obsidian.PostBuildCommands)
 
 	filter "system:windows"
 		systemversion "latest"

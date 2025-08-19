@@ -1,0 +1,6 @@
+[submodule "vendor/Obsidian/Obsidian"]
+	path = vendor/Obsidian/Obsidian
+	url = https://github.com/Ggjorven/Obsidian.git
+[submodule "vendor/Nano/Nano"]
+	path = vendor/Nano/Nano
+	url = https://github.com/Ggjorven/Nano.git

@@ -25,8 +25,7 @@ end)
 ------------------------------------------------------------------------------
 OutputDir = "%{cfg.buildcfg}-%{cfg.system}"
 MacOSVersion = "14.5"
-
-OBSIDIAN_GRAPHICS_API = "vulkan"
+Dependencies = require("Dependencies")
 
 workspace "Mario"
 	architecture "x86_64"
@@ -45,7 +44,7 @@ workspace "Mario"
 	}
 
 group "Dependencies"
-	-- include "vendor/Library"
+	include "vendor/Obsidian/Obsidian/premake5-external"
 group ""
 
 include "Mario"
