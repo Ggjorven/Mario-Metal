@@ -5,6 +5,15 @@
 #include "Mario/Core/Logging.hpp"
 #include "Mario/Core/Settings.hpp"
 
+#include "Mario/Renderer/Sheet.hpp"
+
+#include <format>
+
+namespace
+{
+    static Mario::Game* s_Instance = nullptr;
+}
+
 namespace Mario
 {
 
@@ -13,6 +22,9 @@ namespace Mario
     ////////////////////////////////////////////////////////////////////////////////////
     Game::Game()
     {
+        s_Instance = this;
+        
+        // Window
         m_Window.Construct(Obsidian::WindowSpecification()
             .SetWidthAndHeight(Settings::WindowWidth, Settings::WindowHeight)
             .SetTitle("Mario: Metal")
@@ -20,6 +32,7 @@ namespace Mario
             .SetEventCallback([this](Obsidian::Event e) mutable { OnEvent(e); })
         );
 
+        // Device
         m_Device.Construct(Obsidian::DeviceSpecification()
             .SetNativeWindow(m_Window->GetNativeWindow())
             .SetMessageCallback([this](Obsidian::DeviceMessageType type, const std::string& message)
@@ -34,10 +47,55 @@ namespace Mario
             })
             .SetDestroyCallback([this](Obsidian::DeviceDestroyFn fn) { m_DestroyQueue.push(fn); })
         );
+
+        // Swapchain
+        m_Swapchain.Construct(m_Device.Get(), Obsidian::SwapchainSpecification()
+            .SetWindow(m_Window.Get())
+            .SetFormat(Obsidian::Format::RGBA8Unorm)
+            .SetColourSpace(Obsidian::ColourSpace::SRGB)
+#if defined(MM_PLATFORM_APPLE)
+            .SetVSync(true) // Note: Vulkan via MoltenVK without VSync causes bad screen tearing (at least on my mac)
+#else
+            .SetVSync(false)
+#endif
+            .SetDebugName("Swapchain")
+        );
+
+        // CommandPools
+        for (uint8_t i = 0; i < Obsidian::Information::FramesInFlight; i++)
+        {
+            m_CommandPools[i].Construct(m_Swapchain.Get(), Obsidian::CommandListPoolSpecification()
+                .SetQueue(Obsidian::CommandQueue::Graphics)
+                .SetDebugName(std::format("CommandPool for frame: {0}", i))
+            );
+        }
+
+        // CommandBuffers
+        for (uint8_t i = 0; i < Obsidian::Information::FramesInFlight; i++)
+        {
+            m_CommandLists[i].Construct(m_CommandPools[i].Get(), Obsidian::CommandListSpecification()
+                .SetDebugName(std::format("CommandList for frame: {0}", i))
+            );
+        }
+
+        // Resources & Renderer
+        m_Resources.Construct();
+        m_Renderer.Construct(m_Resources.Get());
     }
 
     Game::~Game()
     {
+        m_Renderer.Destroy();
+        m_Resources.Destroy();
+
+        for (auto& pool : m_CommandPools)
+            m_Swapchain->FreePool(pool.Get());
+
+        m_Device->DestroySwapchain(m_Swapchain.Get());
+        m_Device->Wait();
+        DestroyQueue();
+
+        s_Instance = nullptr;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -48,18 +106,35 @@ namespace Mario
         while (m_Window->IsOpen())
         {
             m_Window->PollEvents();
+            m_Swapchain->AcquireNextImage();
 
-            m_Window->SwapBuffers();
-            
-            // Handle destroys
+            // Rendering
             {
-                while (!m_DestroyQueue.empty())
-                {
-                    m_DestroyQueue.front()();
-                    m_DestroyQueue.pop();
-                }
+                m_CommandPools[m_Swapchain->GetCurrentFrame()]->Reset();
+                auto& list = m_CommandLists[m_Swapchain->GetCurrentFrame()];
+                list->Open();
+
+                
+
+                list->Close();
+                list->Submit(Obsidian::CommandListSubmitArgs()
+                    .SetWaitForSwapchainImage(true)
+                    .SetOnFinishMakeSwapchainPresentable(true)
+                );
             }
+
+            m_Swapchain->Present();
+            m_Window->SwapBuffers();
+            DestroyQueue();
         }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    // Static getter
+    ////////////////////////////////////////////////////////////////////////////////////
+    Game& Game::Instance()
+    {
+        return *s_Instance;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -102,6 +177,15 @@ namespace Mario
         {
             m_Window->Close();
         });
+    }
+
+    void Game::DestroyQueue()
+    {
+        while (!m_DestroyQueue.empty())
+        {
+            m_DestroyQueue.front()();
+            m_DestroyQueue.pop();
+        }
     }
 
 }

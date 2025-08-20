@@ -82,6 +82,11 @@ local Dependencies =
         IncludeDir = local_require("vendor/Photon/Photon/Dependencies.lua").Photon.IncludeDir,
         LibName = local_require("vendor/Photon/Photon/Dependencies.lua").Photon.LibName,
         PostBuildCommands = local_require("vendor/Photon/Photon/Dependencies.lua").Photon.PostBuildCommands,
+    },
+
+    Stb =
+    {
+        IncludeDir = this_directory() .. "vendor/stb/stb"
     }
 }
 

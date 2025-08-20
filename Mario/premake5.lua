@@ -51,6 +51,8 @@ project "Mario"
 	links(Dependencies.Photon.LibName)
 	postbuildcommands(Dependencies.Photon.PostBuildCommands)
 
+	includedirs(Dependencies.Stb.IncludeDir)
+
 	filter "system:windows"
 		systemversion "latest"
 		staticruntime "on"
