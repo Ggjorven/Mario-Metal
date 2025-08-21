@@ -114,7 +114,15 @@ namespace Mario
                 auto& list = m_CommandLists[m_Swapchain->GetCurrentFrame()];
                 list->Open();
 
-                
+                m_Renderer->Begin();
+
+                // TODO: Game logic
+                {
+
+                }
+
+                m_Renderer->End();
+                m_Renderer->Flush(list);
 
                 list->Close();
                 list->Submit(Obsidian::CommandListSubmitArgs()

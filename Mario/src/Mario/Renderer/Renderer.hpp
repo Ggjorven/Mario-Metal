@@ -66,7 +66,7 @@ namespace Mario
 		// Methods
 		void Begin();
 		void End();
-		void Flush();
+		void Flush(Obsidian::CommandList& list);
 
 		void Resize(uint32_t width, uint32_t height);
 
@@ -74,6 +74,7 @@ namespace Mario
 		// Init methods
 		void InitMain(Obsidian::CommandList& list);
 		void InitBatch(Obsidian::CommandList& list);
+		void InitMario(Obsidian::CommandList& list);
 
 		// Private methods
 

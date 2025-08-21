@@ -81,6 +81,7 @@ namespace Mario
 
 		InitMain(list);
 		InitBatch(list);
+		InitMario(list);
 
 		list.Close();
 		list.Submit(Obsidian::CommandListSubmitArgs());
@@ -114,17 +115,47 @@ namespace Mario
 	////////////////////////////////////////////////////////////////////////////////////
 	void Renderer::Begin()
 	{
-
+		m_Batch.CPUBuffer.clear();
 	}
 
 	void Renderer::End()
 	{
-
+		if (!m_Batch.CPUBuffer.empty())
+		{
+			auto& device = Game::Instance().m_Device.Get();
+			device.WriteBuffer(m_Batch.VertexBuffer.Get(), static_cast<const void*>(m_Batch.CPUBuffer.data()), (m_Batch.CPUBuffer.size() * sizeof(RendererVertex)));
+		}
 	}
 
-	void Renderer::Flush()
+	void Renderer::Flush(Obsidian::CommandList& list)
 	{
+		auto& game = Game::Instance();
+		auto& window = Game::Instance().m_Window.Get();
 
+		list.StartRenderpass(Obsidian::RenderpassStartArgs()
+			.SetRenderpass(m_Batch.Renderpass.Get())
+
+			.SetViewport(Obsidian::Viewport(static_cast<float>(window.GetSize().x), static_cast<float>(window.GetSize().y)))
+			.SetScissor(Obsidian::ScissorRect(Obsidian::Viewport(static_cast<float>(window.GetSize().x), static_cast<float>(window.GetSize().y))))
+
+			.SetColourClear({ 0.0f, 0.0f, 0.0f, 1.0f }) // TODO: Based on level colour?
+		);
+
+		list.BindPipeline(m_Batch.Pipeline.Get());
+
+		list.BindVertexBuffer(m_Batch.VertexBuffer.Get());
+		list.BindIndexBuffer(m_Batch.IndexBuffer.Get());
+
+		list.BindBindingSet(m_Batch.Set0.Get());
+
+		list.DrawIndexed(Obsidian::DrawArguments()
+			.SetVertexCount(static_cast<uint32_t>(((m_Batch.CPUBuffer.size() / 4ull) * 6ull)))
+			.SetInstanceCount(1)
+		);
+
+		list.EndRenderpass(Obsidian::RenderpassEndArgs()
+			.SetRenderpass(m_Batch.Renderpass.Get())
+		);
 	}
 
 	void Renderer::Resize(uint32_t width, uint32_t height)
@@ -418,6 +449,11 @@ namespace Mario
 			device.StopTracking(stagingBuffer);
 			device.DestroyBuffer(stagingBuffer);
 		}
+	}
+
+	void Renderer::InitMario(Obsidian::CommandList& list)
+	{
+		// Initialize mario specific resources
 	}
 
 }
