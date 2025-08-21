@@ -57,6 +57,7 @@ namespace Mario
 	{
 	public:
 		inline static constexpr uint32_t MaxQuads = 10000u;
+		inline static constexpr uint32_t MaxTextures = static_cast<uint32_t>(TextureID::Count);
 	public:
 		// Constructor & Destructor
 		Renderer(const Resources& resources);
@@ -85,8 +86,6 @@ namespace Mario
 			DeferredConstruct<Obsidian::InputLayout> InputLayout = {};
 			DeferredConstruct<Obsidian::BindingLayout> BindingLayoutSet0 = {};
 			DeferredConstruct<Obsidian::GraphicsPipeline> Pipeline = {};
-			
-			DeferredConstruct<Obsidian::Shader> Shader = {};
 
 			DeferredConstruct<Obsidian::BindingSetPool> Set0Pool = {};
 			DeferredConstruct<Obsidian::BindingSet> Set0 = {};
@@ -97,7 +96,7 @@ namespace Mario
 			DeferredConstruct<Obsidian::Buffer> IndexBuffer = {};
 
 			std::vector<RendererVertex> CPUBuffer = { };
-		} Batch;
+		} m_Batch;
 
 		const Resources& m_Resources;
 	};
