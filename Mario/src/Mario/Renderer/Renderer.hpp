@@ -79,6 +79,7 @@ namespace Mario
 
 	private:
 		DeferredConstruct<Obsidian::Image> m_WhiteTexture = {};
+		DeferredConstruct<Obsidian::Sampler> m_TextureSampler = {};
 		DeferredConstruct<Obsidian::Buffer> m_CameraBuffer = {};
 		
 		struct

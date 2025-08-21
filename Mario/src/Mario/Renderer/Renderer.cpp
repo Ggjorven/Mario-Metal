@@ -93,7 +93,19 @@ namespace Mario
 	{
 		auto& device = Game::Instance().m_Device.Get();
 
+		device.DestroyInputLayout(m_Batch.InputLayout.Get());
+		device.DestroyBindingLayout(m_Batch.BindingLayoutSet0.Get());
+		device.DestroyGraphicsPipeline(m_Batch.Pipeline.Get());
+
+		device.FreeBindingSetPool(m_Batch.Set0Pool.Get());
+
+		device.DestroyRenderpass(m_Batch.Renderpass.Get());
+
+		device.DestroyBuffer(m_Batch.IndexBuffer.Get());
+		device.DestroyBuffer(m_Batch.VertexBuffer.Get());
+
 		device.DestroyBuffer(m_CameraBuffer.Get());
+		device.DestroySampler(m_TextureSampler.Get());
 		device.DestroyImage(m_WhiteTexture.Get());
 	}
 
@@ -151,6 +163,14 @@ namespace Mario
 		device.WriteImage(stagingImage, Obsidian::ImageSliceSpecification(), &white, sizeof(white));
 
 		list.CopyImage(m_WhiteTexture.Get(), Obsidian::ImageSliceSpecification(), stagingImage, Obsidian::ImageSliceSpecification());
+
+		// Sampler
+		m_TextureSampler.Construct(device, Obsidian::SamplerSpecification()
+			.SetAllFilters(Obsidian::FilterMode::Nearest)
+			.SetAllAddressModes(Obsidian::SamplerAddressMode::Clamp)
+
+			.SetDebugName("Texture sampler")
+		);
 
 		// Camera buffer
 		m_CameraBuffer.Construct(device, Obsidian::BufferSpecification()
@@ -370,7 +390,33 @@ namespace Mario
 				return array;
 			}();
 
-			// ...
+			Obsidian::Buffer stagingBuffer = device.CreateBuffer(Obsidian::BufferSpecification()
+				.SetSize(sizeof(indices))
+				.SetCPUAccess(Obsidian::CpuAccessMode::Write)
+			);
+			device.StartTracking(stagingBuffer);
+
+			m_Batch.IndexBuffer.Construct(device, Obsidian::BufferSpecification()
+				.SetFormat(Obsidian::Format::R32UInt)
+				.SetSize(sizeof(indices))
+				.SetIsIndexBuffer(true)
+				.SetDebugName("IndexBuffer")
+			);
+			device.StartTracking(m_Batch.IndexBuffer.Get(), Obsidian::ResourceState::IndexBuffer);
+
+			device.WriteBuffer(stagingBuffer, static_cast<const void*>(indices.data()), sizeof(indices));
+			list.CopyBuffer(m_Batch.IndexBuffer.Get(), stagingBuffer, sizeof(indices));
+
+			m_Batch.VertexBuffer.Construct(device, Obsidian::BufferSpecification()
+				.SetSize(MaxQuads * sizeof(RendererVertex))
+				.SetIsVertexBuffer(true)
+				.SetCPUAccess(Obsidian::CpuAccessMode::Write)
+				.SetDebugName("Vertexbuffer")
+			);
+			device.StartTracking(m_Batch.VertexBuffer.Get(), Obsidian::ResourceState::VertexBuffer);
+
+			device.StopTracking(stagingBuffer);
+			device.DestroyBuffer(stagingBuffer);
 		}
 	}
 
