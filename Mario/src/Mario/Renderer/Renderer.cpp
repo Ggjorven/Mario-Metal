@@ -160,7 +160,8 @@ namespace Mario
 
 	void Renderer::Resize(uint32_t width, uint32_t height)
 	{
-
+		(void)width; (void)height; // Note: Useless I know, but maybe useful in the future
+		m_Batch.Renderpass->ResizeFramebuffers();
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////

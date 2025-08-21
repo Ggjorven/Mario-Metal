@@ -179,7 +179,8 @@ namespace Mario
         Nano::Events::EventHandler handler(e);
         handler.Handle<Obsidian::WindowResizeEvent>([this](Obsidian::WindowResizeEvent& wre) mutable
         {
-            // ...
+            m_Swapchain->Resize(wre.GetWidth(), wre.GetHeight());
+            m_Renderer->Resize(wre.GetWidth(), wre.GetHeight());
         });
         handler.Handle<Obsidian::WindowCloseEvent>([this](Obsidian::WindowCloseEvent&) mutable
         {
