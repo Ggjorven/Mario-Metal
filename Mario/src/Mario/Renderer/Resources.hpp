@@ -22,16 +22,16 @@ namespace Mario
 		struct UV
 		{
 		public:
-			Obsidian::Maths::Vec2<float> TopLeft;
-			Obsidian::Maths::Vec2<float> TopRight;
-			Obsidian::Maths::Vec2<float> BottomLeft;
-			Obsidian::Maths::Vec2<float> BottomRight;
+			Obsidian::Maths::Vec2<float> TopLeft = { 0.0f, 0.0f };
+			Obsidian::Maths::Vec2<float> TopRight = { 1.0f, 0.0f };
+			Obsidian::Maths::Vec2<float> BottomLeft = { 0.0f, 1.0f };
+			Obsidian::Maths::Vec2<float> BottomRight = { 1.0f, 1.0f };
 		};
 
 		struct Mario
 		{
 		public:
-			inline static constexpr UV Standing = UV({ 0.0f, 0.0f }, { 16.0f / 480.0f , 0.0f }, { 0.0f, 16.0f / 620.0f }, { 16.0f / 620.0f, 16.0f / 620.0f });
+			inline static constexpr UV Standing = UV({ 0.0f, 0.0f }, { 16.0f / 480.0f , 0.0f }, { 0.0f, 16.0f / 620.0f }, { 16.0f / 480.0f, 16.0f / 620.0f });
 
 		};
 	public:

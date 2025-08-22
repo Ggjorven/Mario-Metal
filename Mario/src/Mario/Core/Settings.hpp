@@ -31,7 +31,7 @@ namespace Mario::Settings
 		std::array<uint8_t, 3>({ 0, 0, 168 }),
 	});
 
-	inline constexpr const std::string_view MarioLuigiSheet = "Resources/Images/mario-luigi-sheet.png";
+	inline constexpr const std::string_view MarioLuigiSheet = "Resources/Images/Mario-Luigi-Sheet-1.png";
 	inline constexpr const std::string_view ItemsObjectsSheet = "Resources/Images/items-objects-sheet.png";
 	inline constexpr const std::string_view EnemiesBossesSheet = "Resources/Images/enemies-bosses-sheet.png";
 	inline constexpr const std::string_view TileSheet = "Resources/Images/tile-sheet.png";

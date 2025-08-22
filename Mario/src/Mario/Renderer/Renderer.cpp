@@ -7,6 +7,8 @@
 
 #include "Mario/Renderer/Resources.hpp"
 
+#include <Obsidian/Maths/Functions.hpp>
+
 namespace
 {
 
@@ -54,12 +56,12 @@ layout(location = 2) in vec4 v_Colour;
 layout(location = 3) flat in uint v_TextureID;
 
 layout (set = 0, binding = 1) uniform texture2D u_Textures[];
-layout (set = 0, binding = 2) uniform sampler u_Samplers[];
+layout (set = 0, binding = 2) uniform sampler u_Sampler;
 
 void main()
 {
 	// TODO: Make sure this dynamic indexing is fine on all platforms
-    o_Colour = v_Colour * texture(sampler2D(u_Textures[v_TextureID], u_Samplers[v_TextureID]), v_TexCoord);
+    o_Colour = v_Colour * texture(sampler2D(u_Textures[v_TextureID], u_Sampler), v_TexCoord);
 }
 	)";
 
@@ -71,7 +73,7 @@ namespace Mario
 	////////////////////////////////////////////////////////////////////////////////////
 	// Constructor & Destructor
 	////////////////////////////////////////////////////////////////////////////////////
-	Renderer::Renderer(const Resources& resources)
+	Renderer::Renderer(Resources& resources)
 		: m_Resources(resources)
 	{
 		auto& pool = Game::Instance().m_CommandPools[0].Get();
@@ -116,6 +118,12 @@ namespace Mario
 	void Renderer::Begin()
 	{
 		m_Batch.CPUBuffer.clear();
+
+		// Temporary check
+		{
+			//DrawQuad({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, Resources::UV(), TextureID::MarioLuigi);
+			DrawQuad({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, Resources::Mario::Standing, TextureID::MarioLuigi);
+		}
 	}
 
 	void Renderer::End()
@@ -129,7 +137,6 @@ namespace Mario
 
 	void Renderer::Flush(Obsidian::CommandList& list)
 	{
-		auto& game = Game::Instance();
 		auto& window = Game::Instance().m_Window.Get();
 
 		list.StartRenderpass(Obsidian::RenderpassStartArgs()
@@ -165,11 +172,12 @@ namespace Mario
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////
-	// Private methods
+	// Init methods
 	////////////////////////////////////////////////////////////////////////////////////
 	void Renderer::InitMain(Obsidian::CommandList& list)
 	{
-		auto& device = Game::Instance().m_Device.Get();
+		auto& game = Game::Instance();
+		auto& device = game.m_Device.Get();
 
 		// White Texture
 		m_WhiteTexture.Construct(device, Obsidian::ImageSpecification()
@@ -213,6 +221,9 @@ namespace Mario
 		);
 
 		RendererCamera camera;
+		camera.Projection = Obsidian::Maths::Orthographic(Obsidian::Maths::AspectRatio(game.m_Window->GetSize().x, game.m_Window->GetSize().y));
+		camera.Projection = Obsidian::Maths::ApplyProjectionCorrection(camera.Projection);
+
 		device.WriteBuffer(m_CameraBuffer.Get(), &camera, sizeof(camera));
 
 		device.StopTracking(stagingImage);
@@ -294,10 +305,9 @@ namespace Mario
 				)
 				.AddItem(Obsidian::BindingLayoutItem()
 					.SetSlot(2)
-					.SetSize(MaxTextures)
 					.SetType(Obsidian::ResourceType::Sampler)
 					.SetVisibility(Obsidian::ShaderStage::Fragment)
-					.SetDebugName("u_Samplers")
+					.SetDebugName("u_Sampler")
 				)
 
 				.SetDebugName("BindingSetLayout for set 0")
@@ -454,7 +464,80 @@ namespace Mario
 
 	void Renderer::InitMario(Obsidian::CommandList& list)
 	{
-		// Initialize mario specific resources
+		(void)list;
+
+		m_Batch.Set0->SetItem(0, m_CameraBuffer.Get()); // Camera
+
+		m_Batch.Set0->SetItem(1, m_WhiteTexture.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::White));
+		m_Batch.Set0->SetItem(1, m_Resources.m_MarioLuigiSheet.m_Image.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::MarioLuigi));
+		m_Batch.Set0->SetItem(1, m_Resources.m_EnemiesBossesSheet.m_Image.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::EnemiesBosses));
+		m_Batch.Set0->SetItem(1, m_Resources.m_ItemsObjectsSheet.m_Image.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::ItemsObjects));
+		m_Batch.Set0->SetItem(1, m_Resources.m_TileSheet.m_Image.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::Tiles));
+
+		m_Batch.Set0->SetItem(2, m_TextureSampler.Get()); // Sampler
+
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////
+	// Private methods
+	////////////////////////////////////////////////////////////////////////////////////
+	void Renderer::DrawQuad(const Obsidian::Maths::Vec3<float>& position, const Obsidian::Maths::Vec2<float>& size, const Resources::UV& uv, TextureID textureID)
+	{
+		// Note: I can't figure out why the UVs in this project are different
+		// FUTURE TODO: ...
+
+		//constexpr const Obsidian::Maths::Vec2<float> uv0(1.0f, 0.0f);
+		//constexpr const Obsidian::Maths::Vec2<float> uv1(0.0f, 0.0f);
+		//constexpr const Obsidian::Maths::Vec2<float> uv2(0.0f, 1.0f);
+		//constexpr const Obsidian::Maths::Vec2<float> uv3(1.0f, 1.0f);
+
+		//constexpr const Obsidian::Maths::Vec2<float> uv0(1.0f, 1.0f); // top-right
+		//constexpr const Obsidian::Maths::Vec2<float> uv1(0.0f, 1.0f); // top-left
+		//constexpr const Obsidian::Maths::Vec2<float> uv2(0.0f, 0.0f); // bottom-left
+		//constexpr const Obsidian::Maths::Vec2<float> uv3(1.0f, 0.0f); // bottom-right
+
+		if ((m_Batch.CPUBuffer.size() / 4u) >= MaxQuads) [[unlikely]]
+		{
+			Game::Instance().OnMessage(MessageType::Warn, std::format("Reached max amount of quads ({0}), to support more either manually change BatchRenderer2D::MaxQuads or contact the developer.", MaxQuads));
+			return;
+		}
+
+		const float zAxis = position.z * -1.0f;
+
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y, zAxis), uv.TopRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y, zAxis), uv.TopLeft, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y + size.y, zAxis), uv.BottomLeft, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y + size.y, zAxis), uv.BottomRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y, zAxis), uv1, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y, zAxis), uv0, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y + size.y, zAxis), uv2, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y + size.y, zAxis), uv3, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y, zAxis), uv0, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y, zAxis), uv1, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y + size.y, zAxis), uv2, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y + size.y, zAxis), uv3, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y, zAxis), uv1, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y, zAxis), uv0, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y + size.y, zAxis), uv3, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y + size.y, zAxis), uv2, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+	
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y, zAxis), uv.BottomRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y, zAxis), uv.BottomLeft, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y + size.y, zAxis), uv.TopLeft, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y + size.y, zAxis), uv.TopRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+	
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y, zAxis), uv.TopRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y, zAxis), uv.TopLeft, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y + size.y, zAxis), uv.BottomLeft, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		//m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y + size.y, zAxis), uv.BottomRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+	
+		m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y, zAxis), uv.BottomLeft, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y, zAxis), uv.BottomRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y + size.y, zAxis), uv.TopRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
+		m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y + size.y, zAxis), uv.TopLeft, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
 	}
 
 }

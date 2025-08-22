@@ -2,6 +2,8 @@
 
 #include "Mario/Core/Core.hpp"
 
+#include "Mario/Renderer/Resources.hpp"
+
 #include <Obsidian/Renderer/Image.hpp>
 #include <Obsidian/Renderer/Buffer.hpp>
 #include <Obsidian/Renderer/Shader.hpp>
@@ -17,8 +19,6 @@
 
 namespace Mario
 {
-
-	class Resources;
 
 	////////////////////////////////////////////////////////////////////////////////////
 	// RendererVertex
@@ -45,7 +45,7 @@ namespace Mario
 	////////////////////////////////////////////////////////////////////////////////////
 	// TextureID
 	////////////////////////////////////////////////////////////////////////////////////
-	enum class TextureID : uint8_t
+	enum class TextureID : uint32_t // Matches TextureID in RendererVertex
 	{
 		White = 0, MarioLuigi, EnemiesBosses, ItemsObjects, Tiles, Count
 	};
@@ -60,7 +60,7 @@ namespace Mario
 		inline static constexpr uint32_t MaxTextures = static_cast<uint32_t>(TextureID::Count);
 	public:
 		// Constructor & Destructor
-		Renderer(const Resources& resources);
+		Renderer(Resources& resources);
 		~Renderer();
 
 		// Methods
@@ -77,6 +77,7 @@ namespace Mario
 		void InitMario(Obsidian::CommandList& list);
 
 		// Private methods
+		void DrawQuad(const Obsidian::Maths::Vec3<float>& position, const Obsidian::Maths::Vec2<float>& size, const Resources::UV& uv, TextureID textureID);
 
 	private:
 		DeferredConstruct<Obsidian::Image> m_WhiteTexture = {};
@@ -100,7 +101,7 @@ namespace Mario
 			std::vector<RendererVertex> CPUBuffer = { };
 		} m_Batch;
 
-		const Resources& m_Resources;
+		Resources& m_Resources;
 	};
 
 }
