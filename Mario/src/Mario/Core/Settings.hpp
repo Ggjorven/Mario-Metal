@@ -24,10 +24,10 @@ namespace Mario::Settings
 	// Sheet settings
 	////////////////////////////////////////////////////////////////////////////////////
 	inline constexpr const auto SheetTransparency = std::to_array<std::array<uint8_t, 3>>({
-		std::array<uint8_t, 3>({ 0, 41, 140 }),
-		std::array<uint8_t, 3>({ 146, 144, 255 }),
-		std::array<uint8_t, 3>({ 108, 106, 255 }),
-		std::array<uint8_t, 3>({ 92, 148, 252 }),
+		//std::array<uint8_t, 3>({ 0, 41, 140 }),
+		//std::array<uint8_t, 3>({ 146, 144, 255 }),
+		//std::array<uint8_t, 3>({ 108, 106, 255 }),
+		//std::array<uint8_t, 3>({ 92, 148, 252 }),
 		std::array<uint8_t, 3>({ 0, 0, 168 }),
 	});
 

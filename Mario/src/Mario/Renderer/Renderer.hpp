@@ -70,14 +70,13 @@ namespace Mario
 
 		void Resize(uint32_t width, uint32_t height);
 
+		void DrawQuad(const Obsidian::Maths::Vec3<float>& position, const Obsidian::Maths::Vec2<float>& size, const Resources::UV& uv, TextureID textureID);
+
 	private:
 		// Init methods
 		void InitMain(Obsidian::CommandList& list);
 		void InitBatch(Obsidian::CommandList& list);
 		void InitMario(Obsidian::CommandList& list);
-
-		// Private methods
-		void DrawQuad(const Obsidian::Maths::Vec3<float>& position, const Obsidian::Maths::Vec2<float>& size, const Resources::UV& uv, TextureID textureID);
 
 	private:
 		DeferredConstruct<Obsidian::Image> m_WhiteTexture = {};
