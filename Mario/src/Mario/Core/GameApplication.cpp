@@ -1,17 +1,15 @@
 #include "mmpch.h"
-#include "Game.hpp"
+#include "GameApplication.hpp"
 
 #include "Mario/Core/Core.hpp"
 #include "Mario/Core/Logging.hpp"
 #include "Mario/Core/Settings.hpp"
 
-#include "Mario/Renderer/Sheet.hpp"
-
 #include <format>
 
 namespace
 {
-    static Mario::Game* s_Instance = nullptr;
+    static Mario::GameApplication* s_Instance = nullptr;
 }
 
 namespace Mario
@@ -20,7 +18,7 @@ namespace Mario
     ////////////////////////////////////////////////////////////////////////////////////
     // Constructor & Destructor
     ////////////////////////////////////////////////////////////////////////////////////
-    Game::Game()
+    GameApplication::GameApplication()
     {
         s_Instance = this;
         
@@ -78,18 +76,13 @@ namespace Mario
             );
         }
 
-        // Resources & Renderer
-        m_Resources.Construct();
-        m_Renderer.Construct(m_Resources.Get());
-
         // Game
-        m_Camera.Construct(m_Position, m_Window->GetSize().x, m_Window->GetSize().y);
+        m_Game.Construct(m_Window->GetSize().x, m_Window->GetSize().y);
     }
 
-    Game::~Game()
+    GameApplication::~GameApplication()
     {
-        m_Renderer.Destroy();
-        m_Resources.Destroy();
+        m_Game.Destroy();
 
         for (auto& pool : m_CommandPools)
             m_Swapchain->FreePool(pool.Get());
@@ -104,8 +97,11 @@ namespace Mario
     ////////////////////////////////////////////////////////////////////////////////////
     // Methods
     ////////////////////////////////////////////////////////////////////////////////////
-    void Game::Run()
+    void GameApplication::Run()
     {
+        double lastTime = m_Window->GetWindowTime();
+        double currentTime = m_Window->GetWindowTime();
+
         while (m_Window->IsOpen())
         {
             m_Window->PollEvents();
@@ -117,14 +113,12 @@ namespace Mario
                 auto& list = m_CommandLists[m_Swapchain->GetCurrentFrame()];
                 list->Open();
 
-                m_Renderer->Begin(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
-
-                // TODO: Game logic
+                currentTime = m_Window->GetWindowTime();
                 {
-
+                    m_Game->OnUpdate(currentTime - lastTime);
+                    m_Game->OnRender(list);
                 }
-
-                m_Renderer->End(list, { 0.0f, 0.0f, 0.0f, 1.0f });
+                lastTime = currentTime;
 
                 list->Close();
                 list->Submit(Obsidian::CommandListSubmitArgs()
@@ -142,7 +136,7 @@ namespace Mario
     ////////////////////////////////////////////////////////////////////////////////////
     // Static getter
     ////////////////////////////////////////////////////////////////////////////////////
-    Game& Game::Instance()
+    GameApplication& GameApplication::Instance()
     {
         return *s_Instance;
     }
@@ -150,7 +144,7 @@ namespace Mario
     ////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ////////////////////////////////////////////////////////////////////////////////////
-    void Game::OnMessage(MessageType type, const std::string& message)
+    void GameApplication::OnMessage(MessageType type, const std::string& message)
     {
         switch (type)
         {
@@ -176,21 +170,22 @@ namespace Mario
         }
     }
 
-    void Game::OnEvent(Obsidian::Event& e)
+    void GameApplication::OnEvent(Obsidian::Event& e)
     {
-        Nano::Events::EventHandler handler(e);
+        EventHandler handler(e);
         handler.Handle<Obsidian::WindowResizeEvent>([this](Obsidian::WindowResizeEvent& wre) mutable
         {
             m_Swapchain->Resize(wre.GetWidth(), wre.GetHeight());
-            m_Renderer->Resize(wre.GetWidth(), wre.GetHeight());
         });
         handler.Handle<Obsidian::WindowCloseEvent>([this](Obsidian::WindowCloseEvent&) mutable
         {
             m_Window->Close();
         });
+
+        m_Game->OnEvent(e);
     }
 
-    void Game::DestroyQueue()
+    void GameApplication::DestroyQueue()
     {
         while (!m_DestroyQueue.empty())
         {

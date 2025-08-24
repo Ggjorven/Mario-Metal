@@ -2,10 +2,7 @@
 
 #include "Mario/Core/Core.hpp"
 
-#include "Mario/Renderer/Resources.hpp"
-#include "Mario/Renderer/Renderer.hpp"
-
-#include "Mario/Game/LevelCamera.hpp"
+#include "Mario/Game/Game.hpp"
 
 #include <Nano/Nano.hpp>
 
@@ -20,25 +17,26 @@
 namespace Mario
 {
 
-	class Sheet;
+	class Texture;
 	class Resources;
 	class Renderer;
+	class Game;
 
 	////////////////////////////////////////////////////////////////////////////////////
 	// Mario: Metal Game
 	////////////////////////////////////////////////////////////////////////////////////
-	class Game
+	class GameApplication
 	{
 	public:
 		// Constructor & Destructor
-		Game();
-		~Game();
+		GameApplication();
+		~GameApplication();
 
 		// Methods
 		void Run();
 
 		// Static getter
-		static Game& Instance();
+		static GameApplication& Instance();
 
 	private:
 		// Private methods
@@ -46,6 +44,12 @@ namespace Mario
 		void OnEvent(Obsidian::Event& e);
 
 		void DestroyQueue();
+
+		// Private getters
+		inline const Obsidian::Window& GetWindow() const { return m_Window.Get(); }
+		inline Obsidian::Device& GetDevice() { return m_Device.Get(); }
+		inline const Obsidian::Device& GetDevice() const { return m_Device.Get(); }
+		inline const Obsidian::Swapchain& GetSwapchain() const { return m_Swapchain.Get(); }
 
 	private:
 		// Internals
@@ -58,17 +62,12 @@ namespace Mario
 
 		std::queue<Obsidian::DeviceDestroyFn> m_DestroyQueue = { };
 
-		// Game
-		DeferredConstruct<Resources, true> m_Resources = {};
-		DeferredConstruct<Renderer, true> m_Renderer = {};
+		DeferredConstruct<Game, true> m_Game = {};
 
-		// TODO: Abstract camera somehow
-		Obsidian::Maths::Vec2<float> m_Position = { 0.0f, 0.0f };
-		DeferredConstruct<LevelCamera, true> m_Camera = {};
-
-		friend class Sheet;
+		friend class Texture;
 		friend class Resources;
 		friend class Renderer;
+		friend class Game;
 	};
 
 }

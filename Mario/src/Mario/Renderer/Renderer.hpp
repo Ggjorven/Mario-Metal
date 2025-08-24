@@ -2,7 +2,7 @@
 
 #include "Mario/Core/Core.hpp"
 
-#include "Mario/Renderer/Resources.hpp"
+#include "Mario/Renderer/Texture.hpp"
 
 #include <Obsidian/Renderer/Image.hpp>
 #include <Obsidian/Renderer/Buffer.hpp>
@@ -11,8 +11,6 @@
 #include <Obsidian/Renderer/Bindings.hpp>
 #include <Obsidian/Renderer/Swapchain.hpp>
 #include <Obsidian/Renderer/Renderpass.hpp>
-
-#include <Obsidian/Maths/Structs.hpp>
 
 #include <cstdint>
 #include <array>
@@ -26,10 +24,50 @@ namespace Mario
 	struct RendererVertex
 	{
 	public:
-		Obsidian::Maths::Vec3<float> Position = { 0.0f, 0.0f, 0.0f };
-		Obsidian::Maths::Vec2<float> UV = { 0.0f, 0.0f };
-		Obsidian::Maths::Vec4<float> Colour = { 1.0f, 1.0f, 1.0f, 1.0f };
+		Vec3<float> Position = { 0.0f, 0.0f, 0.0f };
+		Vec2<float> UV = { 0.0f, 0.0f };
+		Vec4<float> Colour = { 1.0f, 1.0f, 1.0f, 1.0f };
 		uint32_t TextureID = 0;
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////
+	// UV
+	////////////////////////////////////////////////////////////////////////////////////
+	struct UV
+	{
+	public:
+		Obsidian::Maths::Vec2<float> TopLeft = { 0.0f, 0.0f };
+		Obsidian::Maths::Vec2<float> TopRight = { 1.0f, 0.0f };
+		Obsidian::Maths::Vec2<float> BottomLeft = { 0.0f, 1.0f };
+		Obsidian::Maths::Vec2<float> BottomRight = { 1.0f, 1.0f };
+
+	public:
+		// Methods
+		inline static constexpr UV Flip(const UV& uv)
+		{
+			UV result;
+
+			result.TopLeft = uv.TopRight;
+			result.TopRight = uv.TopLeft;
+
+			result.BottomLeft = uv.BottomRight;
+			result.BottomRight = uv.BottomLeft;
+
+			return result;
+		}
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////
+	// UV Maps
+	////////////////////////////////////////////////////////////////////////////////////
+	struct UVMaps
+	{
+	public:
+		struct Mario
+		{
+		public:
+			inline static constexpr UV Standing = UV({ 0.0f, 0.0f }, { 16.0f / 480.0f , 0.0f }, { 0.0f, 16.0f / 620.0f }, { 16.0f / 480.0f, 16.0f / 620.0f });
+		};
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////
@@ -45,16 +83,16 @@ namespace Mario
 		inline static constexpr uint32_t MaxTextures = static_cast<uint32_t>(TextureID::Count);
 	public:
 		// Constructor & Destructor
-		Renderer(Resources& resources);
+		Renderer();
 		~Renderer();
 
 		// Methods
-		void Begin(const Obsidian::Maths::Mat4<float>& view, const Obsidian::Maths::Mat4<float>& projection);
-		void End(Obsidian::CommandList& list, const Obsidian::Maths::Vec4<float>& bgColour);
+		void Begin(const Mat4<float>& view, const Mat4<float>& projection);
+		void End(Obsidian::CommandList& list, const Vec4<float>& bgColour);
 
 		void Resize(uint32_t width, uint32_t height);
 
-		void DrawQuad(const Obsidian::Maths::Vec3<float>& position, const Obsidian::Maths::Vec2<float>& size, const UV& uv, TextureID textureID);
+		void DrawQuad(const Vec3<float>& position, const Vec2<float>& size, const UV& uv, TextureID textureID);
 
 	private:
 		// Init methods
@@ -84,7 +122,13 @@ namespace Mario
 			std::vector<RendererVertex> CPUBuffer = { };
 		} m_Batch;
 
-		Resources& m_Resources;
+		struct
+		{
+			Texture MarioLuigi;
+			Texture EnemiesBosses;
+			Texture ItemsObjects;
+			Texture Tile;
+		} m_Sheets;
 	};
 
 }

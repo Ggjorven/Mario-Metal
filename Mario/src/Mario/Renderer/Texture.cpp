@@ -1,11 +1,11 @@
 #include "mmpch.h"
-#include "Sheet.hpp"
+#include "Texture.hpp"
 
 #include "Mario/Core/Core.hpp"
 #include "Mario/Core/Logging.hpp"
 #include "Mario/Core/Settings.hpp"
 
-#include "Mario/Core/Game.hpp"
+#include "Mario/Core/GameApplication.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -18,14 +18,14 @@ namespace Mario
     ////////////////////////////////////////////////////////////////////////////////////
     // Constructor & Destructor
     ////////////////////////////////////////////////////////////////////////////////////
-    Sheet::Sheet(const std::filesystem::path& path)
+    Texture::Texture(const std::filesystem::path& path)
     {
         uint32_t width, height;
         uint8_t* pixels = LoadFromPath(path, width, height);
 
-        auto& game = Game::Instance();
+        auto& game = GameApplication::Instance();
 
-        m_Image.Construct(game.m_Device.Get(), Obsidian::ImageSpecification()
+        m_Image.Construct(game.GetDevice(), Obsidian::ImageSpecification()
             .SetWidthAndHeight(width, height)
             .SetImageDimension(Obsidian::ImageDimension::Image2D)
             .SetImageFormat(Obsidian::Format::RGBA8Unorm)
@@ -61,15 +61,15 @@ namespace Mario
         stbi_image_free(static_cast<void*>(pixels));
     }
 
-    Sheet::~Sheet()
+    Texture::~Texture()
     {
-        Game::Instance().m_Device->DestroyImage(m_Image.Get());
+        GameApplication::Instance().GetDevice().DestroyImage(m_Image.Get());
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
     // Private methods
     ////////////////////////////////////////////////////////////////////////////////////
-    uint8_t* Sheet::LoadFromPath(const std::filesystem::path& path, uint32_t& outWidth, uint32_t& outHeight) const
+    uint8_t* Texture::LoadFromPath(const std::filesystem::path& path, uint32_t& outWidth, uint32_t& outHeight) const
     {
         int width, height, channels;
         stbi_uc* pixels = stbi_load(path.string().c_str(), &width, &height, &channels, STBI_rgb_alpha); // Padds the image with alpha if it has none
@@ -78,33 +78,6 @@ namespace Mario
 
         outWidth = static_cast<uint32_t>(width);
         outHeight = static_cast<uint32_t>(height);
-
-        // Make Settings::SheetTransparency colour into actual transparency
-        {
-            uint32_t pixelCount = (outWidth * outHeight * static_cast<uint32_t>(STBI_rgb_alpha));
-
-            for (uint32_t i = 0; i < pixelCount; i++)
-            {
-                stbi_uc& r = pixels[i];
-                stbi_uc& g = pixels[i + 1];
-                stbi_uc& b = pixels[i + 2];
-                stbi_uc& a = pixels[i + 3];
-
-                for (const auto& transparencyCombination : Settings::SheetTransparency)
-                {
-                    if (r == transparencyCombination[0] &&
-                        g == transparencyCombination[1] &&
-                        b == transparencyCombination[2])
-                    {
-                        r = 0;
-                        b = 0;
-                        g = 0;
-                        a = 0;
-                        break;
-                    }
-                }
-            }
-        }
 
         return pixels;
     }

@@ -2,6 +2,8 @@
 
 #include <Nano/Nano.hpp>
 
+#include <Obsidian/Maths/Structs.hpp>
+
 #include <cstdint>
 
 namespace Mario
@@ -31,5 +33,17 @@ namespace Mario
 	{
 		Trace = 0, Info, Warn, Error, Fatal
 	};
+
+	////////////////////////////////////////////////////////////////////////////////////
+	// Typedefs
+	////////////////////////////////////////////////////////////////////////////////////
+	template<typename T> using Vec2 = Obsidian::Maths::Vec2<T>;
+	template<typename T> using Vec3 = Obsidian::Maths::Vec3<T>;
+	template<typename T> using Vec4 = Obsidian::Maths::Vec4<T>;
+	template<typename T> using Mat3 = Obsidian::Maths::Mat3<T>;
+	template<typename T> using Mat4 = Obsidian::Maths::Mat4<T>;
+
+	template<typename EventVariant>
+	using EventHandler = Nano::Events::EventHandler<EventVariant>;
 
 }

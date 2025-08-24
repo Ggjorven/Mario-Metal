@@ -1,9 +1,9 @@
 #include "mmpch.h"
-#include "Mario/Core/Game.hpp"
+#include "Mario/Core/GameApplication.hpp"
 
 static int Main()
 {
-    Mario::Game game;
+    Mario::GameApplication game;
     game.Run();
     return 0;
 }

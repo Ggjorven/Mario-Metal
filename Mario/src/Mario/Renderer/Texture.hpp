@@ -13,14 +13,14 @@ namespace Mario
 	class Renderer;
 
 	////////////////////////////////////////////////////////////////////////////////////
-	// Sheet
+	// Texture
 	////////////////////////////////////////////////////////////////////////////////////
-	class Sheet
+	class Texture
 	{
 	public:
 		// Constructor & Destructor
-		Sheet(const std::filesystem::path& path);
-		~Sheet();
+		Texture(const std::filesystem::path& path);
+		~Texture();
 
 	private:
 		// Private methods

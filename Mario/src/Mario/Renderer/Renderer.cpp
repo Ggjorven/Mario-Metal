@@ -3,9 +3,8 @@
 
 #include "Mario/Core/Core.hpp"
 #include "Mario/Core/Logging.hpp"
-#include "Mario/Core/Game.hpp"
-
-#include "Mario/Renderer/Resources.hpp"
+#include "Mario/Core/Settings.hpp"
+#include "Mario/Core/GameApplication.hpp"
 
 #include <Obsidian/Maths/Functions.hpp>
 
@@ -73,10 +72,10 @@ namespace Mario
 	////////////////////////////////////////////////////////////////////////////////////
 	// Constructor & Destructor
 	////////////////////////////////////////////////////////////////////////////////////
-	Renderer::Renderer(Resources& resources)
-		: m_Resources(resources)
+	Renderer::Renderer()
+		: m_Sheets(std::filesystem::path(Settings::MarioLuigiSheet), std::filesystem::path(Settings::EnemiesBossesSheet), std::filesystem::path(Settings::ItemsObjectsSheet), std::filesystem::path(Settings::TileSheet))
 	{
-		auto& pool = Game::Instance().m_CommandPools[0].Get();
+		auto& pool = GameApplication::Instance().m_CommandPools[0].Get();
 		auto list = pool.AllocateList(Obsidian::CommandListSpecification());
 
 		list.Open();
@@ -94,7 +93,7 @@ namespace Mario
 
 	Renderer::~Renderer()
 	{
-		auto& device = Game::Instance().m_Device.Get();
+		auto& device = GameApplication::Instance().GetDevice();
 
 		device.DestroyInputLayout(m_Batch.InputLayout.Get());
 		device.DestroyBindingLayout(m_Batch.BindingLayoutSet0.Get());
@@ -120,24 +119,18 @@ namespace Mario
 		m_Batch.CPUBuffer.clear();
 
 		std::array<Obsidian::Maths::Mat4<float>, 2> camera = { view, projection };
-		Game::Instance().m_Device->WriteBuffer(m_CameraBuffer.Get(), &camera, sizeof(camera));
+		GameApplication::Instance().GetDevice().WriteBuffer(m_CameraBuffer.Get(), &camera, sizeof(camera));
 	}
 
 	void Renderer::End(Obsidian::CommandList& list, const Obsidian::Maths::Vec4<float>& bgColour)
 	{
-		{
-			DrawQuad({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, Resources::Mario::Standing, TextureID::MarioLuigi);
-			//DrawQuad({ 500.0f, 500.0f, 0.0f }, { 100.0f, 100.0f }, Resources::Mario::Standing, TextureID::MarioLuigi);
-			//DrawQuad({ -500.0f, -500.0f, 0.0f }, { 100.0f, 100.0f }, Resources::Mario::Standing, TextureID::MarioLuigi);
-		}
-
 		if (!m_Batch.CPUBuffer.empty())
 		{
-			auto& device = Game::Instance().m_Device.Get();
+			auto& device = GameApplication::Instance().GetDevice();
 			device.WriteBuffer(m_Batch.VertexBuffer.Get(), static_cast<const void*>(m_Batch.CPUBuffer.data()), (m_Batch.CPUBuffer.size() * sizeof(RendererVertex)));
 		}
 
-		auto& window = Game::Instance().m_Window.Get();
+		auto& window = GameApplication::Instance().GetWindow();
 
 		list.StartRenderpass(Obsidian::RenderpassStartArgs()
 			.SetRenderpass(m_Batch.Renderpass.Get())
@@ -193,8 +186,8 @@ namespace Mario
 	////////////////////////////////////////////////////////////////////////////////////
 	void Renderer::InitMain(Obsidian::CommandList& list)
 	{
-		auto& game = Game::Instance();
-		auto& device = game.m_Device.Get();
+		auto& game = GameApplication::Instance();
+		auto& device = game.GetDevice();
 
 		// White Texture
 		m_WhiteTexture.Construct(device, Obsidian::ImageSpecification()
@@ -249,8 +242,8 @@ namespace Mario
 
 	void Renderer::InitBatch(Obsidian::CommandList& list)
 	{
-		auto& game = Game::Instance();
-		auto& device = game.m_Device.Get();
+		auto& game = GameApplication::Instance();
+		auto& device = game.GetDevice();
 
 		// Renderpass
 		{
@@ -486,10 +479,10 @@ namespace Mario
 		m_Batch.Set0->SetItem(0, m_CameraBuffer.Get()); // Camera
 
 		m_Batch.Set0->SetItem(1, m_WhiteTexture.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::White));
-		m_Batch.Set0->SetItem(1, m_Resources.m_MarioLuigiSheet.m_Image.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::MarioLuigi));
-		m_Batch.Set0->SetItem(1, m_Resources.m_EnemiesBossesSheet.m_Image.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::EnemiesBosses));
-		m_Batch.Set0->SetItem(1, m_Resources.m_ItemsObjectsSheet.m_Image.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::ItemsObjects));
-		m_Batch.Set0->SetItem(1, m_Resources.m_TileSheet.m_Image.Get(), Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::Tiles));
+		m_Batch.Set0->SetItem(1, m_Sheets.MarioLuigi.m_Image, Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::MarioLuigi));
+		m_Batch.Set0->SetItem(1, m_Sheets.EnemiesBosses.m_Image, Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::EnemiesBosses));
+		m_Batch.Set0->SetItem(1, m_Sheets.ItemsObjects.m_Image, Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::ItemsObjects));
+		m_Batch.Set0->SetItem(1, m_Sheets.Tile.m_Image, Obsidian::ImageSubresourceSpecification(), static_cast<uint32_t>(TextureID::Tiles));
 
 		m_Batch.Set0->SetItem(2, m_TextureSampler.Get()); // Sampler
 	}
