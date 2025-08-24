@@ -115,30 +115,28 @@ namespace Mario
 	////////////////////////////////////////////////////////////////////////////////////
 	// Methods
 	////////////////////////////////////////////////////////////////////////////////////
-	void Renderer::Begin()
+	void Renderer::Begin(const Obsidian::Maths::Mat4<float>& view, const Obsidian::Maths::Mat4<float>& projection)
 	{
 		m_Batch.CPUBuffer.clear();
 
-		// Temporary check
-		{
-			//DrawQuad({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, Resources::UV(), TextureID::MarioLuigi);
-			DrawQuad({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, Resources::Mario::Standing, TextureID::MarioLuigi);
-			DrawQuad({ -1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, Resources::Mario::Standing, TextureID::White);
-			DrawQuad({ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, Resources::Mario::Standing, TextureID::White);
-		}
+		std::array<Obsidian::Maths::Mat4<float>, 2> camera = { view, projection };
+		Game::Instance().m_Device->WriteBuffer(m_CameraBuffer.Get(), &camera, sizeof(camera));
 	}
 
-	void Renderer::End()
+	void Renderer::End(Obsidian::CommandList& list, const Obsidian::Maths::Vec4<float>& bgColour)
 	{
+		{
+			DrawQuad({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, Resources::Mario::Standing, TextureID::MarioLuigi);
+			//DrawQuad({ 500.0f, 500.0f, 0.0f }, { 100.0f, 100.0f }, Resources::Mario::Standing, TextureID::MarioLuigi);
+			//DrawQuad({ -500.0f, -500.0f, 0.0f }, { 100.0f, 100.0f }, Resources::Mario::Standing, TextureID::MarioLuigi);
+		}
+
 		if (!m_Batch.CPUBuffer.empty())
 		{
 			auto& device = Game::Instance().m_Device.Get();
 			device.WriteBuffer(m_Batch.VertexBuffer.Get(), static_cast<const void*>(m_Batch.CPUBuffer.data()), (m_Batch.CPUBuffer.size() * sizeof(RendererVertex)));
 		}
-	}
 
-	void Renderer::Flush(Obsidian::CommandList& list)
-	{
 		auto& window = Game::Instance().m_Window.Get();
 
 		list.StartRenderpass(Obsidian::RenderpassStartArgs()
@@ -147,7 +145,7 @@ namespace Mario
 			.SetViewport(Obsidian::Viewport(static_cast<float>(window.GetSize().x), static_cast<float>(window.GetSize().y)))
 			.SetScissor(Obsidian::ScissorRect(Obsidian::Viewport(static_cast<float>(window.GetSize().x), static_cast<float>(window.GetSize().y))))
 
-			.SetColourClear({ 0.0f, 0.0f, 0.0f, 1.0f }) // TODO: Based on level colour?
+			.SetColourClear(bgColour)
 		);
 
 		list.BindPipeline(m_Batch.Pipeline.Get());
@@ -173,19 +171,17 @@ namespace Mario
 		m_Batch.Renderpass->ResizeFramebuffers();
 	}
 
-	void Renderer::DrawQuad(const Obsidian::Maths::Vec3<float>& position, const Obsidian::Maths::Vec2<float>& size, const Resources::UV& uv, TextureID textureID)
+	void Renderer::DrawQuad(const Obsidian::Maths::Vec3<float>& position, const Obsidian::Maths::Vec2<float>& size, const UV& uv, TextureID textureID)
 	{
-		// Note: I can't figure out why the UVs in this project are different
-		// FUTURE TODO: ...
-
 		if ((m_Batch.CPUBuffer.size() / 4u) >= MaxQuads) [[unlikely]]
 		{
-			Game::Instance().OnMessage(MessageType::Warn, std::format("Reached max amount of quads ({0}), to support more either manually change BatchRenderer2D::MaxQuads or contact the developer.", MaxQuads));
+			MM_LOG_WARN("Reached max amount of quads ({0}), to support more either manually change BatchRenderer2D::MaxQuads or contact the developer.", MaxQuads);
 			return;
 		}
 
 		const float zAxis = position.z * -1.0f;
 
+		// FUTURE TODO: Either remove colour or use it for something
 		m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x, position.y, zAxis), uv.BottomLeft, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
 		m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y, zAxis), uv.BottomRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
 		m_Batch.CPUBuffer.emplace_back(Obsidian::Maths::Vec3<float>(position.x + size.x, position.y + size.y, zAxis), uv.TopRight, Obsidian::Maths::Vec4<float>{ 1.0f, 1.0f, 1.0f, 1.0f }, static_cast<uint32_t>(textureID));
@@ -235,15 +231,15 @@ namespace Mario
 
 		// Camera buffer
 		m_CameraBuffer.Construct(device, Obsidian::BufferSpecification()
-			.SetSize(sizeof(RendererCamera))
+			.SetSize(sizeof(Obsidian::Maths::Mat4<float>) * 2)
 			.SetIsUniformBuffer(true)
 			.SetCPUAccess(Obsidian::CpuAccessMode::Write)
 			.SetPermanentState(Obsidian::ResourceState::ShaderResource)
 		);
 
-		RendererCamera camera;
-		camera.Projection = Obsidian::Maths::Orthographic(Obsidian::Maths::AspectRatio(game.m_Window->GetSize().x, game.m_Window->GetSize().y));
-		camera.Projection = Obsidian::Maths::ApplyProjectionCorrection(camera.Projection);
+		std::array<Obsidian::Maths::Mat4<float>, 2> camera = { Obsidian::Maths::Mat4<float>(1.0f), Obsidian::Maths::Mat4<float>(1.0f) };
+		camera[0] = Obsidian::Maths::Orthographic(Obsidian::Maths::AspectRatio(game.m_Window->GetSize().x, game.m_Window->GetSize().y));
+		camera[0] = Obsidian::Maths::ApplyProjectionCorrection(camera[0]);
 
 		device.WriteBuffer(m_CameraBuffer.Get(), &camera, sizeof(camera));
 

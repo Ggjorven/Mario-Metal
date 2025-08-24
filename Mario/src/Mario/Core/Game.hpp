@@ -5,6 +5,8 @@
 #include "Mario/Renderer/Resources.hpp"
 #include "Mario/Renderer/Renderer.hpp"
 
+#include "Mario/Game/LevelCamera.hpp"
+
 #include <Nano/Nano.hpp>
 
 #include <Obsidian/Core/Window.hpp>
@@ -59,6 +61,10 @@ namespace Mario
 		// Game
 		DeferredConstruct<Resources, true> m_Resources = {};
 		DeferredConstruct<Renderer, true> m_Renderer = {};
+
+		// TODO: Abstract camera somehow
+		Obsidian::Maths::Vec2<float> m_Position = { 0.0f, 0.0f };
+		DeferredConstruct<LevelCamera, true> m_Camera = {};
 
 		friend class Sheet;
 		friend class Resources;

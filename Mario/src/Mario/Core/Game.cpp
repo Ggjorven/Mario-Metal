@@ -81,6 +81,9 @@ namespace Mario
         // Resources & Renderer
         m_Resources.Construct();
         m_Renderer.Construct(m_Resources.Get());
+
+        // Game
+        m_Camera.Construct(m_Position, m_Window->GetSize().x, m_Window->GetSize().y);
     }
 
     Game::~Game()
@@ -114,15 +117,14 @@ namespace Mario
                 auto& list = m_CommandLists[m_Swapchain->GetCurrentFrame()];
                 list->Open();
 
-                m_Renderer->Begin();
+                m_Renderer->Begin(m_Camera->GetViewMatrix(), m_Camera->GetProjectionMatrix());
 
                 // TODO: Game logic
                 {
 
                 }
 
-                m_Renderer->End();
-                m_Renderer->Flush(list);
+                m_Renderer->End(list, { 0.0f, 0.0f, 0.0f, 1.0f });
 
                 list->Close();
                 list->Submit(Obsidian::CommandListSubmitArgs()

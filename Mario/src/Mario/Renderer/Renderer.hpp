@@ -33,28 +33,13 @@ namespace Mario
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////
-	// RendererCamera
-	////////////////////////////////////////////////////////////////////////////////////
-	struct RendererCamera
-	{
-	public:
-		Obsidian::Maths::Mat4<float> View = Obsidian::Maths::Mat4<float>(1.0f);
-		Obsidian::Maths::Mat4<float> Projection = Obsidian::Maths::Mat4<float>(1.0f);
-	};
-
-	////////////////////////////////////////////////////////////////////////////////////
-	// TextureID
-	////////////////////////////////////////////////////////////////////////////////////
-	enum class TextureID : uint32_t // Matches TextureID in RendererVertex
-	{
-		White = 0, MarioLuigi, EnemiesBosses, ItemsObjects, Tiles, Count
-	};
-
-	////////////////////////////////////////////////////////////////////////////////////
 	// Renderer
 	////////////////////////////////////////////////////////////////////////////////////
 	class Renderer
 	{
+	public:
+		// Matches TextureID in RendererVertex
+		enum class TextureID : uint32_t { White = 0, MarioLuigi, EnemiesBosses, ItemsObjects, Tiles, Count };
 	public:
 		inline static constexpr uint32_t MaxQuads = 10000u;
 		inline static constexpr uint32_t MaxTextures = static_cast<uint32_t>(TextureID::Count);
@@ -64,13 +49,12 @@ namespace Mario
 		~Renderer();
 
 		// Methods
-		void Begin();
-		void End();
-		void Flush(Obsidian::CommandList& list);
+		void Begin(const Obsidian::Maths::Mat4<float>& view, const Obsidian::Maths::Mat4<float>& projection);
+		void End(Obsidian::CommandList& list, const Obsidian::Maths::Vec4<float>& bgColour);
 
 		void Resize(uint32_t width, uint32_t height);
 
-		void DrawQuad(const Obsidian::Maths::Vec3<float>& position, const Obsidian::Maths::Vec2<float>& size, const Resources::UV& uv, TextureID textureID);
+		void DrawQuad(const Obsidian::Maths::Vec3<float>& position, const Obsidian::Maths::Vec2<float>& size, const UV& uv, TextureID textureID);
 
 	private:
 		// Init methods

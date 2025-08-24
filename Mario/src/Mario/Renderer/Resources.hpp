@@ -14,35 +14,38 @@ namespace Mario
 {
 
 	////////////////////////////////////////////////////////////////////////////////////
+	// UV
+	////////////////////////////////////////////////////////////////////////////////////
+	struct UV
+	{
+	public:
+		Obsidian::Maths::Vec2<float> TopLeft = { 0.0f, 0.0f };
+		Obsidian::Maths::Vec2<float> TopRight = { 1.0f, 0.0f };
+		Obsidian::Maths::Vec2<float> BottomLeft = { 0.0f, 1.0f };
+		Obsidian::Maths::Vec2<float> BottomRight = { 1.0f, 1.0f };
+
+	public:
+		// Methods
+		inline static constexpr UV Flip(const UV& uv)
+		{
+			UV result;
+
+			result.TopLeft = uv.TopRight;
+			result.TopRight = uv.TopLeft;
+
+			result.BottomLeft = uv.BottomRight;
+			result.BottomRight = uv.BottomLeft;
+
+			return result;
+		}
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////
 	// Resources
 	////////////////////////////////////////////////////////////////////////////////////
 	class Resources
 	{
 	public:
-		struct UV
-		{
-		public:
-			Obsidian::Maths::Vec2<float> TopLeft = { 0.0f, 0.0f };
-			Obsidian::Maths::Vec2<float> TopRight = { 1.0f, 0.0f };
-			Obsidian::Maths::Vec2<float> BottomLeft = { 0.0f, 1.0f };
-			Obsidian::Maths::Vec2<float> BottomRight = { 1.0f, 1.0f };
-
-		public:
-			// Methods
-			inline static constexpr UV Flip(const UV& uv)
-			{
-				UV result;
-
-				result.TopLeft = uv.TopRight;
-				result.TopRight = uv.TopLeft;
-
-				result.BottomLeft = uv.BottomRight;
-				result.BottomRight = uv.BottomLeft;
-
-				return result;
-			}
-		};
-
 		struct Mario
 		{
 		public:
