@@ -31,7 +31,7 @@ namespace Mario
 
 	private:
 		LevelCamera m_Camera;
-		Renderer m_Renderer;
+		Renderer m_Renderer = {};
 	};
 
 }

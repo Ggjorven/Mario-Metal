@@ -21,15 +21,12 @@ namespace Mario
 		~LevelCamera();
 
 		// Methods
+		void Update();
 		void Resize(uint32_t width, uint32_t height);
 
 		// Getters
 		inline const Obsidian::Maths::Mat4<float>& GetViewMatrix() const { return m_View; }
 		inline const Obsidian::Maths::Mat4<float>& GetProjectionMatrix() const { return m_Projection; }
-
-	private:
-		// Private methods
-		void Update();
 
 	private:
 		const Obsidian::Maths::Vec2<float>& m_Position;
