@@ -2,6 +2,7 @@
 
 #include "Mario/Core/Core.hpp"
 
+#include "Mario/Game/Level.hpp"
 #include "Mario/Game/LevelCamera.hpp"
 
 #include "Mario/Renderer/Renderer.hpp"
@@ -30,8 +31,10 @@ namespace Mario
 		void OnEvent(Obsidian::Event& e);
 
 	private:
-		LevelCamera m_Camera;
 		Renderer m_Renderer = {};
+		
+		Level m_World0Level0;
+		LevelCamera m_Camera;
 	};
 
 }

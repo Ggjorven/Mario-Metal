@@ -23,6 +23,8 @@ namespace Mario::Settings
 	////////////////////////////////////////////////////////////////////////////////////
 	// Sheet settings
 	////////////////////////////////////////////////////////////////////////////////////
+	inline constexpr const uint32_t Scale = 4; // Regular scale is 16x16 (1), for visibility we mostly use 64x64 (4)
+
 	inline constexpr const std::string_view MarioLuigiSheet = "Resources/Images/Mario-Luigi-Sheet-1.png";
 	inline constexpr const std::string_view ItemsObjectsSheet = "Resources/Images/items-objects-sheet.png";
 	inline constexpr const std::string_view EnemiesBossesSheet = "Resources/Images/enemies-bosses-sheet.png";

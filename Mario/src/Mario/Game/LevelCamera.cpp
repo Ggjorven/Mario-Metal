@@ -12,11 +12,10 @@ namespace Mario
 	////////////////////////////////////////////////////////////////////////////////////
 	// Constructor & Destructor
 	////////////////////////////////////////////////////////////////////////////////////
-	LevelCamera::LevelCamera(const Obsidian::Maths::Vec2<float>& position, uint32_t width, uint32_t height)
-		: m_Position(position)
+	LevelCamera::LevelCamera(uint32_t width, uint32_t height)
 	{
 		Resize(width, height);
-		Update();
+		m_View = Obsidian::Maths::Translate(Mat4<float>(1.0f), { 0.0f, 0.0f, 0.0f });
 	}
 
 	LevelCamera::~LevelCamera()
@@ -26,9 +25,9 @@ namespace Mario
 	////////////////////////////////////////////////////////////////////////////////////
 	// Methods
 	////////////////////////////////////////////////////////////////////////////////////
-	void LevelCamera::Update()
+	void LevelCamera::Update(const Vec2<float>& position)
 	{
-		m_View = Obsidian::Maths::Translate(Obsidian::Maths::Mat4<float>(1.0f), { m_Position.x, m_Position.y, 0.0f });
+		m_View = Obsidian::Maths::Translate(Mat4<float>(1.0f), { position.x, position.y, 0.0f });
 	}
 
 	void LevelCamera::Resize(uint32_t width, uint32_t height)

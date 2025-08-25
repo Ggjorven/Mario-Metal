@@ -5,7 +5,6 @@
 #include <Obsidian/Maths/Structs.hpp>
 
 #include <cstdint>
-#include <array>
 
 namespace Mario
 {
@@ -17,22 +16,20 @@ namespace Mario
 	{
 	public:
 		// Constructor & Destructor
-		LevelCamera(const Obsidian::Maths::Vec2<float>& position, uint32_t width, uint32_t height);
+		LevelCamera(uint32_t width, uint32_t height);
 		~LevelCamera();
 
 		// Methods
-		void Update();
+		void Update(const Vec2<float>& position);
 		void Resize(uint32_t width, uint32_t height);
 
 		// Getters
-		inline const Obsidian::Maths::Mat4<float>& GetViewMatrix() const { return m_View; }
-		inline const Obsidian::Maths::Mat4<float>& GetProjectionMatrix() const { return m_Projection; }
+		inline const Mat4<float>& GetViewMatrix() const { return m_View; }
+		inline const Mat4<float>& GetProjectionMatrix() const { return m_Projection; }
 
 	private:
-		const Obsidian::Maths::Vec2<float>& m_Position;
-		
-		Obsidian::Maths::Mat4<float> m_View = Obsidian::Maths::Mat4<float>(1.0f);
-		Obsidian::Maths::Mat4<float> m_Projection = Obsidian::Maths::Mat4<float>(1.0f);
+		Mat4<float> m_View = Mat4<float>(1.0f);
+		Mat4<float> m_Projection = Mat4<float>(1.0f);
 	};
 
 }

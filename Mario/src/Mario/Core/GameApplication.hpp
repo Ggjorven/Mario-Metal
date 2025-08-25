@@ -21,6 +21,7 @@ namespace Mario
 	class Resources;
 	class Renderer;
 	class Game;
+	class Level;
 
 	////////////////////////////////////////////////////////////////////////////////////
 	// Mario: Metal Game
@@ -68,6 +69,7 @@ namespace Mario
 		friend class Resources;
 		friend class Renderer;
 		friend class Game;
+		friend class Level;
 	};
 
 }
